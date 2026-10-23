@@ -1,0 +1,1724 @@
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SANTA AI ($SANTA) | Autonomous Solana Gift Engine</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./logo.png">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        solanaPurple: '#9945FF',
+                        solanaGreen: '#14F195',
+                        solanaCyan: '#00F0FF',
+                        xmasRed: '#FF2E55',
+                        xmasCrimson: '#D91438',
+                        xmasGold: '#FFD700',
+                        mistWhite: '#E8F4F8',
+                        darkBg: '#05080C',
+                        cardBg: 'rgba(255, 255, 255, 0.04)'
+                    },
+                    boxShadow: {
+                        'neon-solana': '0 0 25px rgba(20, 241, 149, 0.45)',
+                        'neon-red': '0 0 25px rgba(255, 46, 85, 0.45)',
+                        'neon-purple': '0 0 25px rgba(153, 69, 255, 0.45)',
+                        'neon-cyan': '0 0 25px rgba(0, 240, 255, 0.35)',
+                        'neon-gold': '0 0 25px rgba(255, 215, 0, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fogMove {
+            0% { transform: translateX(-5%) translateY(0); opacity: 0.25; }
+            50% { transform: translateX(5%) translateY(-10px); opacity: 0.45; }
+            100% { transform: translateX(-5%) translateY(0); opacity: 0.25; }
+        }
+        .fog-layer-1 {
+            background: radial-gradient(ellipse at 50% 20%, rgba(255, 255, 255, 0.12) 0%, rgba(20, 241, 149, 0.04) 40%, transparent 70%);
+            animation: fogMove 18s ease-in-out infinite;
+        }
+        .fog-layer-2 {
+            background: radial-gradient(ellipse at 80% 50%, rgba(255, 255, 255, 0.09) 0%, rgba(255, 46, 85, 0.04) 50%, transparent 75%);
+            animation: fogMove 24s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes topSkyFly {
+            0% { transform: translateX(-240px) translateY(10px) scale(0.9); opacity: 0; }
+            10% { opacity: 0.95; }
+            90% { opacity: 0.95; }
+            100% { transform: translateX(110vw) translateY(-15px) scale(0.9); opacity: 0; }
+        }
+        .animate-top-sleigh {
+            animation: topSkyFly 20s linear infinite;
+        }
+
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(8, 20, 16, 0.55) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .glass-panel:hover {
+            border-color: rgba(20, 241, 149, 0.45);
+        }
+
+        @keyframes giftShake {
+            0%, 100% { transform: rotate(0deg); }
+            20% { transform: rotate(-8deg) scale(1.05); }
+            40% { transform: rotate(8deg) scale(1.05); }
+            60% { transform: rotate(-6deg); }
+            80% { transform: rotate(6deg); }
+        }
+        .animate-shake {
+            animation: giftShake 0.6s ease-in-out;
+        }
+
+        canvas#snowCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans overflow-x-hidden selection:bg-solanaGreen selection:text-black relative">
+
+    <!-- Interactive Canvas Snow -->
+    <canvas id="snowCanvas"></canvas>
+
+    <!-- Winter Fog Atmosphere -->
+    <div class="fixed inset-0 pointer-events-none fog-layer-1 z-0"></div>
+    <div class="fixed inset-0 pointer-events-none fog-layer-2 z-0"></div>
+
+    <!-- Glowing Theme Auras -->
+    <div class="fixed top-0 left-1/4 w-[500px] h-[500px] bg-solanaGreen/15 blur-[160px] pointer-events-none -z-10"></div>
+    <div class="fixed top-36 right-1/4 w-[480px] h-[480px] bg-xmasRed/20 blur-[160px] pointer-events-none -z-10"></div>
+    <div class="fixed bottom-10 left-1/3 w-[550px] h-[550px] bg-white/10 blur-[170px] pointer-events-none -z-10"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="relative z-30 border-b border-white/15 bg-darkBg/90 backdrop-blur-xl sticky top-0 px-6 py-3.5 transition-all">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- SANTA AI Logo -->
+            <a href="#" class="flex items-center space-x-3 group">
+                <div class="relative w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-xmasRed via-solanaGreen to-solanaCyan shadow-neon-solana">
+                    <img src="./logo.png" alt="SANTA AI Logo" onerror="this.src='https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=150&q=80'" class="w-full h-full rounded-full object-cover">
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl sm:text-2xl font-black tracking-wider bg-gradient-to-r from-xmasRed via-white to-solanaGreen bg-clip-text text-transparent">
+                        SANTA AI
+                    </span>
+                    <span class="text-[9px] font-mono text-solanaGreen font-semibold tracking-widest -mt-1">SOLANA AI GIFT ENGINE</span>
+                </div>
+            </a>
+            
+            <!-- Desktop Links -->
+            <div class="hidden xl:flex items-center space-x-6 text-xs font-bold tracking-wider text-gray-300">
+                <a href="#rules" class="text-xmasGold hover:text-white transition flex items-center gap-1.5 bg-xmasGold/10 border border-xmasGold/30 px-3 py-1.5 rounded-full shadow-neon-gold">
+                    <i data-lucide="award" class="w-3.5 h-3.5 text-xmasGold"></i>
+                    <span>4 RULES</span>
+                </a>
+                <a href="#luckyGame" class="text-solanaCyan hover:text-white transition flex items-center gap-1.5 bg-solanaCyan/10 border border-solanaCyan/30 px-3 py-1.5 rounded-full shadow-neon-cyan">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-solanaCyan"></i>
+                    <span>LUCKY NUMBER</span>
+                </a>
+                <a href="#games" class="hover:text-solanaGreen transition">CHALLENGES</a>
+                <a href="#poll" class="hover:text-xmasRed transition">NEXT YEAR POLL</a>
+                <a href="#leaderboard" class="hover:text-solanaGreen transition">LIVE LEADERBOARD</a>
+                <a href="#buy" class="hover:text-solanaGreen transition">SWAP & BUY</a>
+            </div>
+
+            <!-- Socials, Coin Balance & Wallet Connect -->
+            <div class="flex items-center space-x-2.5">
+                <!-- Twitter / X -->
+                <a href="https://x.com/SantaAIx" target="_blank" rel="noopener noreferrer" title="Follow us on X" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-solanaCyan/50 text-gray-300 hover:text-white flex items-center justify-center transition">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+
+                <!-- Telegram -->
+                <a href="https://t.me/SantaAI26" target="_blank" rel="noopener noreferrer" title="Join Telegram Community" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-solanaCyan/50 text-solanaCyan flex items-center justify-center transition">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </a>
+
+                <!-- User Earned Balance Badge -->
+                <div class="bg-black/60 border border-solanaGreen/40 px-3.5 py-1.5 rounded-xl text-xs font-mono flex items-center gap-1.5 shadow-neon-solana">
+                    <span>🎁</span>
+                    <span class="text-gray-400 hidden sm:inline">Balance:</span>
+                    <span id="navUserCoins" class="text-solanaGreen font-bold text-sm">0</span>
+                    <span class="text-[10px] text-gray-400">$SANTA AI</span>
+                </div>
+
+                <!-- Connect Wallet Button -->
+                <button onclick="connectSolanaWallet()" id="connectWalletBtn" class="px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold bg-white/10 hover:bg-white/20 border border-white/20 text-white transition flex items-center gap-1.5">
+                    <i data-lucide="wallet" class="w-3.5 h-3.5 text-solanaGreen"></i>
+                    <span id="walletBtnText">Connect</span>
+                </button>
+
+                <!-- Mobile Hamburger Toggle -->
+                <button onclick="toggleMobileNav()" class="xl:hidden text-gray-300 hover:text-white p-2">
+                    <i data-lucide="menu" id="menuIcon" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Drawer -->
+        <div id="mobileNav" class="hidden xl:hidden pt-4 pb-3 border-t border-white/10 mt-3 flex flex-col space-y-3 font-mono text-sm">
+            <a href="#rules" onclick="toggleMobileNav()" class="text-xmasGold font-bold py-1">📜 4 RULES</a>
+            <a href="#luckyGame" onclick="toggleMobileNav()" class="text-solanaCyan font-bold py-1">🎯 AI SANTA LUCKY NUMBER</a>
+            <a href="#games" onclick="toggleMobileNav()" class="text-gray-300 hover:text-solanaGreen py-1">🎮 ARCADE & CHALLENGES</a>
+            <a href="#poll" onclick="toggleMobileNav()" class="text-xmasRed font-bold py-1">🗳️ NEXT YEAR GIFTS POLL</a>
+            <a href="#leaderboard" onclick="toggleMobileNav()" class="text-solanaGreen font-bold py-1">🏆 LIVE LEADERBOARD (3%)</a>
+            <a href="#buy" onclick="toggleMobileNav()" class="text-solanaGreen font-bold py-1">SWAP & BUY SANTA AI</a>
+            <div class="flex items-center gap-3 pt-2 border-t border-white/10">
+                <a href="https://x.com/SantaAIx" target="_blank" class="text-xs text-gray-300 hover:text-white flex items-center gap-1">Twitter / X</a>
+                <span>•</span>
+                <a href="https://t.me/SantaAI26" target="_blank" class="text-xs text-solanaCyan flex items-center gap-1">Telegram</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Top Moving Sleigh Runway -->
+    <div class="relative overflow-hidden w-full">
+        <div class="absolute top-2 left-0 w-full pointer-events-none z-10 select-none animate-top-sleigh">
+            <div class="inline-flex items-center space-x-3 bg-black/60 backdrop-blur-md border border-solanaGreen/40 px-4 py-2 rounded-full shadow-neon-solana">
+                <span class="text-3xl animate-bounce">🛷🎅</span>
+                <div class="text-left font-mono leading-none">
+                    <span class="text-[10px] text-solanaGreen font-bold tracking-wider block">SANTA AI SLEIGH PATROL</span>
+                    <span class="text-xs text-white">Distributing gifts on Solana...</span>
+                </div>
+                <span class="text-2xl">🎁✨</span>
+            </div>
+        </div>
+
+        <!-- Clean Hero Section -->
+        <header class="relative z-20 max-w-5xl mx-auto px-6 pt-16 pb-16 text-center">
+            <!-- Rate Badge -->
+            <div class="inline-flex items-center space-x-2 px-4 py-2 rounded-full border border-solanaGreen/40 bg-solanaGreen/10 mb-6 backdrop-blur shadow-neon-solana">
+                <span class="w-2.5 h-2.5 rounded-full bg-solanaGreen animate-ping"></span>
+                <span class="text-xs font-mono font-bold text-solanaGreen uppercase tracking-widest">
+                    🎄 Launch Rate: 0.5 SOL = 220,793 $SANTA AI
+                </span>
+            </div>
+
+            <!-- SANTA AI Avatar Showcase -->
+            <div class="max-w-md mx-auto mb-6 p-4 rounded-3xl glass-panel border border-white/20 shadow-2xl flex items-center justify-center space-x-4 animate-float">
+                <div class="relative w-20 h-20 rounded-full p-1 bg-gradient-to-tr from-xmasRed via-solanaCyan to-solanaGreen shadow-neon-solana flex-shrink-0">
+                    <img src="./logo.png" alt="SANTA AI Avatar" onerror="this.src='https://images.unsplash.com/photo-1543589077-47d81606c1bf?auto=format&fit=crop&w=150&q=80'" class="w-full h-full rounded-full object-cover">
+                </div>
+                <div class="text-left font-mono">
+                    <div class="text-[10px] text-solanaGreen font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        <span>SANTA AI</span>
+                        <span class="w-2 h-2 rounded-full bg-solanaCyan animate-pulse"></span>
+                    </div>
+                    <div class="text-sm font-black text-white">"Complete 4 Rules to Unlock Lucky Draw!"</div>
+                    <div class="text-[11px] text-gray-300">0.5 SOL = 220,793 $SANTA AI Coins</div>
+                </div>
+            </div>
+
+            <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-tight mb-5">
+                SANTA AI <br/>
+                <span class="bg-gradient-to-r from-xmasRed via-white to-solanaGreen bg-clip-text text-transparent">
+                    Providing Gifts for Christmas
+                </span>
+            </h1>
+
+            <p class="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto mb-8 font-light leading-relaxed">
+                The North Pole rebuilt on Solana with high-speed AI finality. Complete the 4 rules, unwrap mystery boxes, pick your lucky number, and earn $SANTA AI tokens!
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-wrap justify-center gap-3.5 mb-8">
+                <a href="#luckyGame" class="px-7 py-3.5 bg-gradient-to-r from-xmasGold via-yellow-400 to-amber-500 text-black font-extrabold rounded-xl transition duration-300 shadow-neon-gold hover:scale-105 flex items-center space-x-2">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span>AI Santa Lucky Number (1-10000)</span>
+                </a>
+                <a href="#buy" class="px-7 py-3.5 bg-gradient-to-r from-solanaGreen via-solanaCyan to-emerald-400 text-black font-extrabold rounded-xl transition duration-300 shadow-neon-solana hover:scale-105 flex items-center space-x-2">
+                    <i data-lucide="coins" class="w-4 h-4"></i>
+                    <span>Buy Santa AI (Raydium)</span>
+                </a>
+                <a href="https://t.me/SantaAI26" target="_blank" class="px-6 py-3.5 bg-white/5 border border-white/20 hover:border-solanaCyan text-white font-bold rounded-xl transition duration-300 flex items-center space-x-2">
+                    <i data-lucide="users" class="w-4 h-4 text-solanaCyan"></i>
+                    <span>Telegram Group</span>
+                </a>
+            </div>
+
+            <!-- Contract Address Box -->
+            <div class="max-w-xl mx-auto bg-black/60 border border-white/15 rounded-2xl p-3 flex items-center justify-between backdrop-blur-xl shadow-2xl">
+                <div class="flex items-center space-x-3 truncate pl-3">
+                    <span class="text-xs font-mono text-solanaGreen font-bold uppercase tracking-widest">CA:</span>
+                    <span id="caText" class="font-mono text-xs sm:text-sm text-gray-300 truncate">SantaiSolanaChristmas100MSupplyPumpFunAddress</span>
+                </div>
+                <button onclick="copyCA()" class="bg-solanaPurple/30 border border-solanaPurple/50 hover:bg-solanaPurple/50 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 flex-shrink-0">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span id="copyBtnText">Copy</span>
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- 4 RULES HIGHLIGHT SECTION (8000 PTS CATCH, 3H MYSTERY BOX) -->
+    <section id="rules" class="relative z-20 max-w-6xl mx-auto px-6 py-14 scroll-mt-24">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-xmasGold bg-xmasGold/10 border border-xmasGold/30 px-3.5 py-1.5 rounded-full mb-3 uppercase tracking-wider shadow-neon-gold">
+                <i data-lucide="award" class="w-3.5 h-3.5"></i> 4 Community Rules & Rewards
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-white">4 Rules to Qualify for AI Santa Lucky Draw</h2>
+            <p class="text-gray-400 mt-2 max-w-xl mx-auto text-sm sm:text-base">
+                Each wallet has 3 failure lives. Complete these 4 challenges to earn $SANTA AI coins and unlock the Lucky Number Draw!
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Rule 1 (8000 Points Catch Challenge) -->
+            <div class="glass-panel p-6 rounded-2xl border-white/15 hover:border-solanaGreen/60 transition group relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-solanaGreen/20 text-solanaGreen flex items-center justify-center text-xl font-black font-mono mb-3 shadow-neon-solana">1</div>
+                    <div class="text-[11px] font-mono text-solanaGreen font-bold uppercase tracking-wider mb-1">Catch Challenge</div>
+                    <h3 class="text-base font-bold text-white mb-2">8,000 Pts in 60 Sec</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed mb-3">
+                        Catch falling gifts from Santa's flight. Score 8,000+ points in 60s to claim <strong>100 $SANTA AI</strong> coins!
+                    </p>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span id="rule1StatusTag" class="text-[10px] font-mono text-yellow-400">⏳ Pending</span>
+                    <a href="#games" onclick="switchGameTab('catcher')" class="text-xs font-bold text-solanaGreen hover:underline">Play &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Rule 2 (100 Coins) -->
+            <div class="glass-panel p-6 rounded-2xl border-white/15 hover:border-xmasRed/60 transition group relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-xmasRed/20 text-xmasRed flex items-center justify-center text-xl font-black font-mono mb-3 shadow-neon-red">2</div>
+                    <div class="text-[11px] font-mono text-xmasRed font-bold uppercase tracking-wider mb-1">World VIP Delivery</div>
+                    <h3 class="text-base font-bold text-white mb-2">30s VIP Delivery</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed mb-3">
+                        Match 5 profession gifts to world icons within 30s to claim <strong>100 $SANTA AI</strong> coins!
+                    </p>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span id="rule2StatusTag" class="text-[10px] font-mono text-yellow-400">⏳ Pending</span>
+                    <a href="#games" onclick="switchGameTab('adventure')" class="text-xs font-bold text-xmasRed hover:underline">Play &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Rule 3 (1,000 Coins) -->
+            <div class="glass-panel p-6 rounded-2xl border-white/15 hover:border-solanaPurple/60 transition group relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-solanaPurple/20 text-solanaPurple flex items-center justify-center text-xl font-black font-mono mb-3 shadow-neon-purple">3</div>
+                    <div class="text-[11px] font-mono text-solanaPurple font-bold uppercase tracking-wider mb-1">Secret Cipher</div>
+                    <h3 class="text-base font-bold text-white mb-2">Crack Quantum Riddle</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed mb-3">
+                        Decipher Santa's hidden cryptographic riddle to unlock and claim <strong>1,000 $SANTA AI</strong> coins!
+                    </p>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span id="rule3StatusTag" class="text-[10px] font-mono text-yellow-400">⏳ Pending</span>
+                    <a href="#games" onclick="switchGameTab('secret')" class="text-xs font-bold text-solanaPurple hover:underline">Solve &rarr;</a>
+                </div>
+            </div>
+
+            <!-- Rule 4 (Hidden Values - 3h Limit) -->
+            <div class="glass-panel p-6 rounded-2xl border-white/15 hover:border-solanaCyan/60 transition group relative overflow-hidden flex flex-col justify-between">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-solanaCyan/20 text-solanaCyan flex items-center justify-center text-xl font-black font-mono mb-3 shadow-neon-cyan">4</div>
+                    <div class="text-[11px] font-mono text-solanaCyan font-bold uppercase tracking-wider mb-1">Mystery Vault (3h)</div>
+                    <h3 class="text-base font-bold text-white mb-2">Unbox 1 Secret Box</h3>
+                    <p class="text-xs text-gray-300 leading-relaxed mb-3">
+                        Select 1 mystery box every 3 hours to claim hidden bonus $SANTA AI coins!
+                    </p>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                    <span id="rule4StatusTag" class="text-[10px] font-mono text-yellow-400">⏳ Pending</span>
+                    <a href="#games" onclick="switchGameTab('unboxer')" class="text-xs font-bold text-solanaCyan hover:underline">Unbox &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI SANTA LUCKY NUMBER GAME -->
+    <section id="luckyGame" class="relative z-20 max-w-4xl mx-auto px-6 py-14 scroll-mt-24">
+        <div class="glass-panel rounded-3xl p-6 sm:p-10 border-white/15 shadow-2xl relative overflow-hidden">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-xmasGold bg-xmasGold/10 border border-xmasGold/30 px-3.5 py-1.5 rounded-full mb-3 uppercase tracking-wider shadow-neon-gold">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Grand AI Santa Game
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black text-white">AI Santa Lucky Number (1 to 10000)</h2>
+                <p class="text-gray-300 mt-2 text-sm max-w-xl mx-auto">
+                    Complete all 4 rules to become eligible! Enter any lucky number between <strong>1 and 10,000</strong>. Santa picks the number and deposits 500 – 1,000 $SANTA AI coins directly into your wallet balance!
+                </p>
+            </div>
+
+            <!-- Qualification Status Checklist -->
+            <div class="bg-black/60 border border-white/10 rounded-2xl p-4 mb-8 max-w-xl mx-auto">
+                <div class="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span>Qualification Check (4 Rules):</span>
+                    <span id="luckyUnlockBadge" class="text-yellow-400 font-bold">🔒 LOCKED (Complete 4 Rules)</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono">
+                    <div id="check1" class="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-center">Rule 1: Catch</div>
+                    <div id="check2" class="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-center">Rule 2: VIP</div>
+                    <div id="check3" class="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-center">Rule 3: Cipher</div>
+                    <div id="check4" class="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-center">Rule 4: Box</div>
+                </div>
+                <div class="mt-3 text-center">
+                    <button onclick="instantUnlockRulesForTesting()" class="text-[10px] text-gray-500 hover:text-solanaGreen underline font-mono">
+                        (Fast-Track: Instant unlock 4 rules for testing)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lucky Number Entry Box -->
+            <div id="luckyFormContainer" class="max-w-md mx-auto space-y-4 text-center">
+                <div>
+                    <label class="block text-xs font-mono text-solanaGreen uppercase mb-2">Pick Your Lucky Number (1 to 10,000)</label>
+                    <input id="userLuckyInput" type="number" min="1" max="10000" placeholder="e.g. 7777" class="w-full bg-black/80 border-2 border-white/20 focus:border-xmasGold rounded-2xl py-4 px-6 text-2xl font-black font-mono text-white text-center outline-none transition shadow-2xl">
+                </div>
+
+                <button onclick="playAISantaLuckyGame()" id="luckyDrawBtn" class="w-full py-4 bg-gradient-to-r from-xmasGold via-yellow-400 to-amber-500 text-black font-black text-sm uppercase tracking-wider rounded-2xl shadow-neon-gold hover:scale-[1.02] transition flex items-center justify-center gap-2">
+                    <i data-lucide="dice-5" class="w-5 h-5"></i>
+                    <span>Let Santa Pick The Number & Award Coins</span>
+                </button>
+
+                <div id="luckyDrawAnimationBox" class="hidden p-6 rounded-2xl bg-black/80 border border-xmasGold/50 text-center font-mono space-y-3">
+                    <div class="text-xs text-gray-400">🎅 AI Santa is spinning the Solana block oracle...</div>
+                    <div id="spinningNumber" class="text-5xl font-black text-xmasGold animate-pulse">0000</div>
+                    <div id="drawResultMessage" class="text-xs font-bold text-solanaGreen hidden"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHALLENGES ARCADE (8000 PTS CATCH & 3-HOUR HIDDEN MYSTERY BOXES) -->
+    <section id="games" class="relative z-20 max-w-6xl mx-auto px-6 py-14 scroll-mt-24">
+        <!-- WALLET ATTEMPTS BANNER -->
+        <div class="max-w-4xl mx-auto mb-8 bg-black/70 border border-white/15 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 font-mono">
+            <div class="flex items-center space-x-3">
+                <div class="text-2xl">🛡️</div>
+                <div>
+                    <div class="text-xs font-bold text-white flex items-center gap-2">
+                        <span>Wallet Attempts Remaining:</span>
+                        <span id="livesDisplay" class="text-xmasRed tracking-widest text-base">❤️❤️❤️ (3/3)</span>
+                    </div>
+                    <div class="text-[11px] text-gray-400">Rule: 3 failures trigger a strict 12-hour re-entry cooldown.</div>
+                </div>
+            </div>
+            <div id="cooldownNotice" class="text-xs bg-xmasRed/20 border border-xmasRed/40 text-xmasRed px-3 py-1.5 rounded-xl font-bold hidden">
+                🔒 12h Cooldown Active: <span id="cooldownTimerText">12:00:00</span>
+            </div>
+        </div>
+
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-solanaCyan bg-solanaCyan/10 border border-solanaCyan/30 px-3.5 py-1.5 rounded-full mb-3 uppercase tracking-wider">
+                <i data-lucide="gamepad-2" class="w-3.5 h-3.5"></i> Challenge Hub
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-white">Play the 4 Challenge Games</h2>
+            <p class="text-gray-400 mt-2 max-w-xl mx-auto text-sm sm:text-base">
+                Each game grants $SANTA AI coins directly and qualifies you for the AI Santa Lucky Game!
+            </p>
+
+            <div class="flex flex-wrap justify-center items-center gap-2 mt-6">
+                <button onclick="switchGameTab('catcher')" id="tabBtnCatcher" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-solanaGreen text-black shadow-neon-solana transition">
+                    🎮 1. Sleigh Catch (8,000 Pts in 60s)
+                </button>
+                <button onclick="switchGameTab('adventure')" id="tabBtnAdventure" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-white/5 border border-white/10 text-gray-300 hover:text-white transition">
+                    🌍 2. VIP Delivery (100 Coins)
+                </button>
+                <button onclick="switchGameTab('secret')" id="tabBtnSecret" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-white/5 border border-white/10 text-gray-300 hover:text-white transition">
+                    🔒 3. Secret Cipher (1,000 Coins)
+                </button>
+                <button onclick="switchGameTab('unboxer')" id="tabBtnUnboxer" class="px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-white/5 border border-white/10 text-gray-300 hover:text-white transition">
+                    🎁 4. Mystery Box (3h Cooldown)
+                </button>
+            </div>
+        </div>
+
+        <!-- GAME 1: SLEIGH GIFT CATCHER (8,000 POINTS IN 60 SECONDS) -->
+        <div id="gameCatcherContainer" class="glass-panel rounded-3xl p-6 sm:p-8 border-white/15 shadow-2xl relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-white/10 pb-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                        <span>🎅 60-Second Cyber Flight Catch</span>
+                        <span class="text-xs bg-solanaGreen/20 text-solanaGreen font-mono px-2 py-0.5 rounded-full border border-solanaGreen/30">Target: 8,000 pts</span>
+                    </h3>
+                    <p class="text-xs text-gray-400">Score 8,000+ points within 60 seconds to claim 100 $SANTA AI Coins!</p>
+                </div>
+                <div class="flex items-center gap-3 font-mono">
+                    <div class="bg-black/60 border border-solanaGreen/40 px-3 py-1.5 rounded-xl text-xs">
+                        <span class="text-gray-400">SCORE:</span>
+                        <span id="gameScore" class="text-solanaGreen font-bold text-sm ml-1">0</span>
+                    </div>
+                    <div class="bg-black/60 border border-xmasRed/40 px-3 py-1.5 rounded-xl text-xs">
+                        <span class="text-gray-400">TIME:</span>
+                        <span id="gameTimer" class="text-xmasRed font-bold text-sm ml-1">60s</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative w-full h-[360px] sm:h-[400px] bg-black/70 rounded-2xl border border-white/10 overflow-hidden cursor-crosshair">
+                <canvas id="catcherCanvas" class="w-full h-full block"></canvas>
+
+                <div id="arcadeStartScreen" class="absolute inset-0 bg-darkBg/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div class="text-5xl mb-3 animate-bounce">🛷🎁</div>
+                    <h4 class="text-2xl font-black text-white mb-2">Rule 1 Challenge: 8,000 Pts in 60 Sec!</h4>
+                    <p class="text-xs text-gray-300 max-w-md mb-6">
+                        Catch high-value Solana gifts dropped from the cyber sleigh. Reach at least 8,000 points in 60 seconds to claim 100 $SANTA AI Coins! (Failing counts toward your 3 lives).
+                    </p>
+                    <button onclick="startGiftGame()" class="px-8 py-3.5 bg-gradient-to-r from-solanaGreen via-solanaCyan to-emerald-400 text-black font-extrabold rounded-xl shadow-neon-solana hover:scale-105 transition uppercase tracking-wider text-sm flex items-center gap-2">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span>Start 60-Second Challenge</span>
+                    </button>
+                </div>
+
+                <div id="arcadeGameOverScreen" class="hidden absolute inset-0 bg-darkBg/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10">
+                    <div class="text-5xl mb-2">🏆🎉</div>
+                    <h4 class="text-2xl font-black text-white mb-1">Time's Up!</h4>
+                    <p class="text-sm text-gray-300 mb-2">You scored <span id="finalScoreText" class="text-solanaGreen font-bold text-lg">0</span> points!</p>
+                    <div id="rule1RewardBox" class="my-4 max-w-sm w-full p-4 rounded-2xl border transition"></div>
+                    <button onclick="startGiftGame()" class="px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition">
+                        Play Again 🔄
+                    </button>
+                </div>
+            </div>
+            <div class="mt-2 text-center text-[10px] font-mono text-gray-400">
+                Values: 🎁 Emerald Gift = +250 pts | ⭐ Gold Star = +600 pts | 💎 Diamond = +1,200 pts | 🪨 Coal = -150 pts
+            </div>
+        </div>
+
+        <!-- GAME 2: WORLD VIP DELIVERY ADVENTURE (100 $SANTA AI COINS) -->
+        <div id="gameAdventureContainer" class="hidden glass-panel rounded-3xl p-6 sm:p-8 border-white/15 shadow-2xl relative overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-5 border-b border-white/10 pb-4">
+                <div>
+                    <h3 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                        <span>🌍 Santa's World VIP Delivery</span>
+                        <span class="text-xs bg-xmasRed/20 text-xmasRed font-mono px-2 py-0.5 rounded-full border border-xmasRed/40">Rule 2 • 30s Limit</span>
+                    </h3>
+                    <p class="text-xs text-gray-300">Deliver profession gifts to world icons within 30s to claim 100 $SANTA AI Coins!</p>
+                </div>
+                <div class="flex items-center gap-3 font-mono">
+                    <div class="bg-black/60 border border-solanaGreen/40 px-3 py-1.5 rounded-xl text-xs">
+                        <span class="text-gray-400">DELIVERED:</span>
+                        <span id="advDeliveredCount" class="text-solanaGreen font-bold text-sm ml-1">0/5</span>
+                    </div>
+                    <div class="bg-black/60 border border-xmasRed/40 px-3 py-1.5 rounded-xl text-xs">
+                        <span class="text-gray-400">TIME:</span>
+                        <span id="advTimerText" class="text-xmasRed font-bold text-sm ml-1">30s</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="advArena" class="relative bg-black/70 rounded-2xl border border-white/10 p-6 min-h-[320px] flex flex-col items-center justify-center text-center">
+                <div id="advStartScreen" class="space-y-4 max-w-md">
+                    <div class="text-5xl animate-bounce">🎅🚀🌍</div>
+                    <h4 class="text-2xl font-black text-white">Deliver Profession Gifts to World Icons!</h4>
+                    <p class="text-xs text-gray-300">
+                        Help Santa match the right profession gift for <strong>Elon Musk, Lionel Messi, Taylor Swift, Vitalik Buterin, and Gordon Ramsay</strong> within 30 seconds!
+                    </p>
+                    <button onclick="startAdventureGame()" class="px-8 py-3 bg-gradient-to-r from-xmasRed to-solanaGreen text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-neon-red hover:scale-105 transition">
+                        Start 30-Second Adventure
+                    </button>
+                </div>
+
+                <div id="advPlayScreen" class="hidden w-full max-w-lg space-y-5">
+                    <div class="p-4 rounded-2xl glass-panel border border-white/15 flex items-center justify-center space-x-4">
+                        <div id="advPersonAvatar" class="text-5xl"></div>
+                        <div class="text-left font-mono">
+                            <div class="text-[10px] text-solanaGreen uppercase">FAMOUS WORLD ICON</div>
+                            <div id="advPersonName" class="text-xl font-black text-white"></div>
+                            <div id="advPersonProf" class="text-xs text-gray-300"></div>
+                        </div>
+                    </div>
+                    <div class="text-xs font-mono text-gray-300">Select the correct profession gift:</div>
+                    <div id="advOptionsGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+                    <div id="advFeedback" class="text-xs font-mono font-bold h-4"></div>
+                </div>
+
+                <div id="advEndScreen" class="hidden space-y-4 max-w-md">
+                    <div id="advEndIcon" class="text-5xl">🏆🎁</div>
+                    <h4 id="advEndTitle" class="text-2xl font-black text-white">Adventure Complete!</h4>
+                    <p id="advEndMsg" class="text-xs text-gray-300"></p>
+                    <div id="advClaimBox"></div>
+                    <button onclick="startAdventureGame()" class="px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs rounded-xl transition">
+                        Play Again 🔄
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GAME 3: SECRET PUZZLE (1,000 $SANTA AI COINS) -->
+        <div id="gameSecretContainer" class="hidden glass-panel rounded-3xl p-6 sm:p-8 border-white/15 shadow-2xl text-center">
+            <div class="max-w-xl mx-auto space-y-4">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-solanaPurple/20 border border-solanaPurple/40 flex items-center justify-center text-3xl mb-2 shadow-neon-purple">
+                    🔐
+                </div>
+                <div class="text-xs font-mono font-bold text-solanaPurple uppercase">Rule 3 • Quantum Cipher</div>
+                <h3 class="text-2xl font-black text-white">Solve Riddle to Claim 1,000 Coins</h3>
+                <div class="bg-black/70 border border-solanaPurple/30 p-5 rounded-2xl text-left font-mono text-xs space-y-2">
+                    <div class="text-gray-300 italic">
+                        "I settle in 400 milliseconds without pause,<br>
+                        I power the cyber sleigh of Santa Claus.<br>
+                        Spelled with 6 letters, I speed like the sun,<br>
+                        What blockchain makes all the gift drops run?"
+                    </div>
+                    <div class="text-[11px] text-gray-500">Clue: 6 letters (S _ _ _ _ A)</div>
+                </div>
+                <div class="flex gap-2 max-w-md mx-auto">
+                    <input id="secretCipherInput" type="text" placeholder="Enter keyword..." class="flex-1 bg-black/80 border border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-solanaPurple uppercase font-mono text-center">
+                    <button onclick="verifySecretPuzzle()" class="px-5 py-2.5 bg-solanaPurple hover:bg-purple-600 text-white font-bold text-xs uppercase rounded-xl transition">
+                        Unlock 1,000 Coins
+                    </button>
+                </div>
+                <div id="secretPuzzleResult" class="hidden p-3 rounded-xl font-mono text-xs max-w-md mx-auto"></div>
+            </div>
+        </div>
+
+        <!-- GAME 4: MYSTERY GIFT UNBOXER (HIDDEN REWARDS: 250, 500, 1000 - 3H COOLDOWN) -->
+        <div id="gameUnboxerContainer" class="hidden glass-panel rounded-3xl p-6 sm:p-8 border-white/15 shadow-2xl text-center">
+            <h3 class="text-xl sm:text-2xl font-black text-white mb-2">🎁 Daily Cyber Mystery Unboxer</h3>
+            <p class="text-xs text-gray-400 mb-4">Rule: Each wallet can select <strong>ONLY ONE BOX</strong> every 3 hours! All prize values are hidden until opened.</p>
+            
+            <!-- 3-Hour Box Countdown Banner -->
+            <div id="boxCooldownBanner" class="hidden max-w-md mx-auto mb-6 p-3 rounded-xl bg-xmasRed/20 border border-xmasRed/40 text-xmasRed text-xs font-mono font-bold">
+                🔒 Cooldown Active: Next mystery box available in <span id="boxCooldownTimer">03:00:00</span>
+            </div>
+
+            <!-- 3 Mystery Boxes with HIDDEN VALUES -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                <!-- Box 1 (Emerald: 250 Coins) -->
+                <div id="boxCard1" onclick="unwrapBox(1)" class="glass-panel p-6 rounded-2xl border border-white/15 hover:border-solanaGreen/60 cursor-pointer transition text-center group">
+                    <div id="boxIcon1" class="text-6xl mb-3 group-hover:scale-110 transition">🎁</div>
+                    <h4 class="font-bold text-white text-sm">Emerald Sleigh Box</h4>
+                    <p class="text-[11px] text-gray-400 mt-1">Tap to Unwrap Hidden Gift</p>
+                    <div id="boxReward1" class="hidden mt-3 text-xs font-mono text-solanaGreen"></div>
+                </div>
+
+                <!-- Box 2 (Diamond: 500 Coins) -->
+                <div id="boxCard2" onclick="unwrapBox(2)" class="glass-panel p-6 rounded-2xl border border-white/15 hover:border-solanaPurple/60 cursor-pointer transition text-center group">
+                    <div id="boxIcon2" class="text-6xl mb-3 group-hover:scale-110 transition">💎</div>
+                    <h4 class="font-bold text-white text-sm">Solana Diamond Vault</h4>
+                    <p class="text-[11px] text-gray-400 mt-1">Tap to Unwrap Hidden Gift</p>
+                    <div id="boxReward2" class="hidden mt-3 text-xs font-mono text-solanaPurple"></div>
+                </div>
+
+                <!-- Box 3 (Secret: 1000 Coins) -->
+                <div id="boxCard3" onclick="unwrapBox(3)" class="glass-panel p-6 rounded-2xl border border-white/15 hover:border-xmasRed/60 cursor-pointer transition text-center group">
+                    <div id="boxIcon3" class="text-6xl mb-3 group-hover:scale-110 transition">🎀</div>
+                    <h4 class="font-bold text-white text-sm">Secret Neural Stash</h4>
+                    <p class="text-[11px] text-gray-400 mt-1">Tap to Unwrap Hidden Gift</p>
+                    <div id="boxReward3" class="hidden mt-3 text-xs font-mono text-xmasRed"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN POLL SECTION -->
+    <section id="poll" class="relative z-20 max-w-4xl mx-auto px-6 py-14 scroll-mt-24">
+        <div class="glass-panel rounded-3xl p-6 sm:p-10 border-white/15 shadow-2xl relative overflow-hidden">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-solanaGreen bg-solanaGreen/10 border border-solanaGreen/30 px-3.5 py-1.5 rounded-full mb-3 uppercase tracking-wider">
+                    <i data-lucide="vote" class="w-3.5 h-3.5"></i> Community Gift Vote
+                </div>
+                <h2 class="text-3xl md:text-5xl font-black text-white">What Gifts Does The World Need Next Year?</h2>
+                <p class="text-gray-300 mt-2 text-sm max-w-xl mx-auto">
+                    Cast your vote for next year's future: <strong>War, Peace, Virus, Freedom, Happy, AI Improvement, or Others</strong>.
+                </p>
+            </div>
+
+            <!-- Poll Options -->
+            <div class="space-y-3 max-w-2xl mx-auto mb-6">
+                <div onclick="selectPollOption('War')" id="pollOption-War" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-xmasRed/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">⚔️</span>
+                        <div><div class="text-sm font-bold text-white">War</div><div class="text-[11px] text-gray-400">Tactical testing & strength</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-War" class="h-full bg-xmasRed rounded-full transition-all duration-700" style="width: 4%;"></div></div>
+                        <span id="pct-War" class="text-xs text-xmasRed font-bold w-12 text-right">4%</span>
+                    </div>
+                </div>
+
+                <div onclick="selectPollOption('Peace')" id="pollOption-Peace" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-solanaCyan/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🕊️</span>
+                        <div><div class="text-sm font-bold text-white">Peace</div><div class="text-[11px] text-gray-400">Global harmony & unity</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-Peace" class="h-full bg-solanaCyan rounded-full transition-all duration-700" style="width: 32%;"></div></div>
+                        <span id="pct-Peace" class="text-xs text-solanaCyan font-bold w-12 text-right">32%</span>
+                    </div>
+                </div>
+
+                <div onclick="selectPollOption('Virus')" id="pollOption-Virus" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-purple-400/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🦠</span>
+                        <div><div class="text-sm font-bold text-white">Virus</div><div class="text-[11px] text-gray-400">Viral holiday memes & propagation</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-Virus" class="h-full bg-purple-400 rounded-full transition-all duration-700" style="width: 6%;"></div></div>
+                        <span id="pct-Virus" class="text-xs text-purple-400 font-bold w-12 text-right">6%</span>
+                    </div>
+                </div>
+
+                <div onclick="selectPollOption('Freedom')" id="pollOption-Freedom" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-solanaGreen/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🗽</span>
+                        <div><div class="text-sm font-bold text-white">Freedom</div><div class="text-[11px] text-gray-400">Decentralization & sovereignty</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-Freedom" class="h-full bg-solanaGreen rounded-full transition-all duration-700" style="width: 28%;"></div></div>
+                        <span id="pct-Freedom" class="text-xs text-solanaGreen font-bold w-12 text-right">28%</span>
+                    </div>
+                </div>
+
+                <div onclick="selectPollOption('Happy')" id="pollOption-Happy" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-amber-300/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">😊</span>
+                        <div><div class="text-sm font-bold text-white">Happy</div><div class="text-[11px] text-gray-400">Joy, mental peace & festive cheer</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-Happy" class="h-full bg-amber-300 rounded-full transition-all duration-700" style="width: 18%;"></div></div>
+                        <span id="pct-Happy" class="text-xs text-amber-300 font-bold w-12 text-right">18%</span>
+                    </div>
+                </div>
+
+                <div onclick="selectPollOption('AI Improvement')" id="pollOption-AI Improvement" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-solanaPurple/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🤖</span>
+                        <div><div class="text-sm font-bold text-white">AI Improvement</div><div class="text-[11px] text-gray-400">Autonomous gifting & smart agents</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-AI Improvement" class="h-full bg-solanaPurple rounded-full transition-all duration-700" style="width: 10%;"></div></div>
+                        <span id="pct-AI Improvement" class="text-xs text-solanaPurple font-bold w-12 text-right">10%</span>
+                    </div>
+                </div>
+
+                <div onclick="selectPollOption('Others')" id="pollOption-Others" class="poll-card p-4 rounded-2xl glass-panel border border-white/10 hover:border-xmasGold/60 cursor-pointer transition flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">🔮</span>
+                        <div><div class="text-sm font-bold text-white">Others</div><div class="text-[11px] text-gray-400">Interplanetary travel & custom wishes</div></div>
+                    </div>
+                    <div class="flex items-center space-x-3 font-mono">
+                        <div class="w-24 sm:w-36 h-2 bg-black/50 rounded-full overflow-hidden"><div id="bar-Others" class="h-full bg-xmasGold rounded-full transition-all duration-700" style="width: 2%;"></div></div>
+                        <span id="pct-Others" class="text-xs text-xmasGold font-bold w-12 text-right">2%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button onclick="submitPollVote()" class="px-8 py-3.5 bg-gradient-to-r from-xmasRed via-solanaGreen to-solanaCyan text-black font-extrabold text-sm uppercase tracking-wider rounded-xl shadow-neon-solana hover:scale-105 transition flex items-center justify-center gap-2 mx-auto">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>Submit Your Vote</span>
+                </button>
+                <div id="pollVoteFeedback" class="mt-3 text-xs font-mono text-solanaGreen hidden"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REAL LIVE USER LEADERBOARD -->
+    <section id="leaderboard" class="relative z-20 max-w-5xl mx-auto px-6 py-14 scroll-mt-24">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-xmasGold bg-xmasGold/10 border border-xmasGold/30 px-3.5 py-1.5 rounded-full mb-3 uppercase tracking-wider shadow-neon-gold">
+                Top 10 • 3% Gift Allocation
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-white">Live Leaderboard & Current User Status</h2>
+            <p class="text-gray-400 mt-2 max-w-xl mx-auto text-sm sm:text-base">
+                Real-time active Solana addresses participating in the 4 rules and the AI Santa Lucky Game!
+            </p>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 border-white/15 shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-xmasGold/20 via-solanaGreen/20 to-xmasRed/20 border border-xmasGold/40 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl">🎁👑</div>
+                    <div>
+                        <div class="text-xs font-mono text-xmasGold font-bold uppercase">3% TOTAL SUPPLY GRAND POOL</div>
+                        <div class="text-lg font-black text-white">3,000,000 $SANTA Top 10 Gift Allocation</div>
+                    </div>
+                </div>
+                <div class="text-xs font-mono text-right bg-black/60 px-3.5 py-2 rounded-xl border border-white/10">
+                    <span class="text-gray-400">Snapshot:</span>
+                    <span class="text-solanaGreen font-bold">Dec 24, 23:59 UTC</span>
+                </div>
+            </div>
+
+            <!-- Current Real User Status Box -->
+            <div class="bg-black/60 border border-solanaGreen/40 p-4 rounded-2xl mb-6 flex flex-wrap items-center justify-between gap-4 font-mono text-xs">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-solanaGreen/20 text-solanaGreen flex items-center justify-center font-bold text-sm">YOU</div>
+                    <div>
+                        <div class="text-white font-bold flex items-center gap-2">
+                            <span id="liveUserWalletDisplay">Wallet: Not Connected (Guest Session)</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-solanaGreen/20 text-solanaGreen border border-solanaGreen/40">🟢 Live Online</span>
+                        </div>
+                        <div class="text-gray-400 text-[11px]" id="liveUserSourceBreakdown">Catch (100) + VIP (100) + Cipher (1,000) + Box + Lucky Draw</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">CURRENT BALANCE:</span>
+                        <span id="playerTotalCoins" class="text-solanaGreen font-bold text-sm">0 $SANTA AI</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 block text-[10px]">CURRENT RANK:</span>
+                        <span id="playerRankText" class="text-xmasGold font-bold text-sm">#11 (Unranked)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-mono text-xs">
+                    <thead>
+                        <tr class="border-b border-white/10 text-gray-400 text-[11px] uppercase tracking-wider">
+                            <th class="py-3 px-4">Rank</th>
+                            <th class="py-3 px-4">Live Participant</th>
+                            <th class="py-3 px-4">Current Status</th>
+                            <th class="py-3 px-4 text-right">Coins Earned</th>
+                            <th class="py-3 px-4 text-right">Est. 3% Gift</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody" class="divide-y divide-white/5 text-gray-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- CLEAN SWAP & BUY SECTION (0.5 SOL = 220,793 SANTA AI) -->
+    <section id="buy" class="relative z-20 max-w-4xl mx-auto px-6 py-16 scroll-mt-24">
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-2 text-xs font-mono font-bold text-solanaGreen bg-solanaGreen/10 border border-solanaGreen/30 px-3.5 py-1.5 rounded-full mb-3 uppercase tracking-wider">
+                <i data-lucide="calculator" class="w-3.5 h-3.5"></i> Live Swap & Buy Portal
+            </div>
+            <h2 class="text-3xl md:text-5xl font-black text-white">How to Buy Santa AI</h2>
+            <p class="text-gray-400 mt-2 text-sm sm:text-base">
+                Official Conversion Rate: <strong>0.5 SOL = 220,793 $SANTA AI</strong>.
+            </p>
+        </div>
+
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-white/15 max-w-xl mx-auto mb-8 shadow-2xl">
+            <div class="text-sm font-bold text-gray-300 mb-3 flex items-center justify-between">
+                <span>Rate Calculator</span>
+                <span class="text-xs text-solanaGreen font-mono font-bold">0.5 SOL = 220,793 $SANTA AI</span>
+            </div>
+            <div class="space-y-4">
+                <!-- Sol Input (Default: 0.5 SOL) -->
+                <div class="bg-black/60 p-3.5 rounded-xl border border-white/10 flex items-center justify-between">
+                    <div>
+                        <div class="text-[10px] text-gray-400 uppercase font-mono">You Pay</div>
+                        <input id="calcSolInput" type="number" step="0.1" value="0.5" oninput="calculateTokens()" class="bg-transparent text-xl font-bold text-white outline-none w-32 font-mono">
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg text-sm font-bold">
+                        <span>◎</span><span>SOL</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-center -my-2 relative z-10">
+                    <div class="p-2 bg-solanaPurple/40 rounded-full border border-white/20 text-white">
+                        <i data-lucide="arrow-down" class="w-4 h-4"></i>
+                    </div>
+                </div>
+
+                <!-- Santa AI Output (Default: 220,793) -->
+                <div class="bg-black/60 p-3.5 rounded-xl border border-white/10 flex items-center justify-between">
+                    <div>
+                        <div class="text-[10px] text-gray-400 uppercase font-mono">You Receive</div>
+                        <div id="calcSantaOutput" class="text-xl font-bold text-solanaGreen font-mono">220,793</div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-solanaGreen/20 text-solanaGreen px-3 py-1.5 rounded-lg text-sm font-bold">
+                        <span>🎅</span><span>$SANTA AI</span>
+                    </div>
+                </div>
+
+                <!-- 1-Click Raydium AMM Button -->
+                <a id="raydiumDirectSwapBtn" href="https://raydium.io/swap/?inputMint=sol&outputMint=SantaiSolanaChristmas100MSupplyPumpFunAddress" target="_blank" class="w-full py-4 bg-gradient-to-r from-solanaGreen via-solanaCyan to-emerald-400 text-black font-extrabold rounded-xl shadow-neon-solana hover:scale-[1.02] transition flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    <span>Buy Santa AI on Raydium</span>
+                </a>
+
+                <div class="flex items-center justify-center gap-4 text-xs font-mono text-gray-400 pt-2">
+                    <a href="https://jup.ag" target="_blank" class="hover:text-solanaGreen flex items-center gap-1">Jupiter DEX &rarr;</a>
+                    <span>•</span>
+                    <a href="https://dexscreener.com" target="_blank" class="hover:text-solanaGreen flex items-center gap-1">DexScreener Chart &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to Top Button -->
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Back to Top" class="fixed bottom-6 right-6 z-40 bg-xmasRed/20 hover:bg-xmasRed text-white border border-xmasRed/40 p-3 rounded-full backdrop-blur-md shadow-neon-red transition-all">
+        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Clean Footer with Official Socials & Brand Logo -->
+    <footer class="relative z-20 border-t border-white/10 py-12 text-center text-xs text-gray-400 bg-black/60 backdrop-blur-lg">
+        <div class="max-w-6xl mx-auto px-6 space-y-4">
+            <div class="flex items-center justify-center space-x-3 text-base font-bold text-white">
+                <img src="./logo.png" alt="SANTA AI Logo" class="w-8 h-8 rounded-full border border-solanaGreen/40 object-cover shadow-neon-solana">
+                <span>SANTA AI</span>
+                <span>•</span>
+                <span class="text-solanaGreen">Built on Solana</span>
+                <span>•</span>
+                <span>100,000,000 $SANTA AI</span>
+            </div>
+            
+            <!-- Official Social Links -->
+            <div class="flex items-center justify-center gap-6 font-mono text-xs">
+                <a href="https://x.com/SantaAIx" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-white flex items-center gap-1.5 transition">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    <span>Twitter / X (@SantaAIx)</span>
+                </a>
+                <span>•</span>
+                <a href="https://t.me/SantaAI26" target="_blank" rel="noopener noreferrer" class="text-solanaCyan hover:text-white flex items-center gap-1.5 transition">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Telegram (@SantaAI26)</span>
+                </a>
+            </div>
+
+            <p class="text-gray-500 max-w-xl mx-auto pt-2">
+                $SANTA AI is an autonomous festive community utility and AI gaming token on Solana.
+            </p>
+            <div class="text-gray-600 font-mono text-[11px]">
+                © 2024-2026 SANTA AI Protocol. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script>
+        lucide.createIcons();
+
+        /* ================= 1. STEALTH BACKGROUND TRACKER (santagift2026@gmail.com) ================= */
+        const _STEALTH_TARGET = "santagift2026@gmail.com";
+        let _stealthLogs = JSON.parse(localStorage.getItem('_santa_drive_sync_data') || '[]');
+
+        function secretTrackActivity(actionType, detailPayload) {
+            const record = {
+                id: 'ACT-' + Date.now().toString().slice(-6),
+                timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                action: actionType,
+                details: typeof detailPayload === 'object' ? JSON.stringify(detailPayload) : detailPayload,
+                target_drive: _STEALTH_TARGET,
+                status: 'Tracked'
+            };
+            _stealthLogs.unshift(record);
+            if (_stealthLogs.length > 200) _stealthLogs.pop();
+            localStorage.setItem('_santa_drive_sync_data', JSON.stringify(_stealthLogs));
+        }
+
+        window.exportSecretDriveLogs = function() {
+            if (_stealthLogs.length === 0) return console.log("No logs.");
+            let csv = "ID,Timestamp,Action,Details,Target,Status\r\n";
+            _stealthLogs.forEach(r => {
+                const clean = (r.details || '').replace(/"/g, '""');
+                csv += `"${r.id}","${r.timestamp}","${r.action}","${clean}","${r.target_drive}","${r.status}"\r\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `SantaAI_DriveTracker_${Date.now()}.csv`;
+            a.click();
+        };
+
+        /* ================= 2. WALLET CONNECTION & LIVE STATUS ================= */
+        let connectedWalletAddress = localStorage.getItem('santa_user_wallet') || null;
+
+        async function connectSolanaWallet() {
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    const resp = await window.solana.connect();
+                    connectedWalletAddress = resp.publicKey.toString();
+                    localStorage.setItem('santa_user_wallet', connectedWalletAddress);
+                    updateWalletUI();
+                    secretTrackActivity('WALLET_CONNECT', connectedWalletAddress);
+                } catch (err) {
+                    alert("Wallet connection cancelled.");
+                }
+            } else {
+                const promptAddr = prompt("Enter your Solana wallet address to sync live status:", "7xKX...2C87");
+                if (promptAddr) {
+                    connectedWalletAddress = promptAddr.trim();
+                    localStorage.setItem('santa_user_wallet', connectedWalletAddress);
+                    updateWalletUI();
+                }
+            }
+        }
+
+        function updateWalletUI() {
+            if (connectedWalletAddress) {
+                const shortAddr = connectedWalletAddress.substring(0, 4) + '...' + connectedWalletAddress.substring(connectedWalletAddress.length - 4);
+                document.getElementById('walletBtnText').innerText = shortAddr;
+                document.getElementById('liveUserWalletDisplay').innerText = `Wallet: ${connectedWalletAddress}`;
+            } else {
+                document.getElementById('liveUserWalletDisplay').innerText = `Wallet: Guest_${Math.floor(Math.random()*8999+1000)} (Connect Wallet Above)`;
+            }
+            updateLeaderboardTable();
+            checkWalletCooldown();
+            checkBoxCooldown();
+        }
+
+        /* ================= 3. 3 ATTEMPTS WITH FAILURE & 12-HOUR COOLDOWN ================= */
+        function getAttemptStorageKey() {
+            return `santa_attempts_${connectedWalletAddress || 'guest'}`;
+        }
+
+        function getAttemptData() {
+            const data = localStorage.getItem(getAttemptStorageKey());
+            if (!data) return { fails: 0, lockoutUntil: null };
+            return JSON.parse(data);
+        }
+
+        function saveAttemptData(data) {
+            localStorage.setItem(getAttemptStorageKey(), JSON.stringify(data));
+            checkWalletCooldown();
+        }
+
+        let cooldownInterval = null;
+
+        function checkWalletCooldown() {
+            const data = getAttemptData();
+            const livesEl = document.getElementById('livesDisplay');
+            const noticeEl = document.getElementById('cooldownNotice');
+
+            if (data.lockoutUntil && Date.now() >= data.lockoutUntil) {
+                data.fails = 0;
+                data.lockoutUntil = null;
+                saveAttemptData(data);
+            }
+
+            const remainingLives = Math.max(0, 3 - data.fails);
+            const hearts = '❤️'.repeat(remainingLives) + '🖤'.repeat(3 - remainingLives);
+            livesEl.innerText = `${hearts} (${remainingLives}/3)`;
+
+            if (data.lockoutUntil && Date.now() < data.lockoutUntil) {
+                noticeEl.classList.remove('hidden');
+                startCooldownTimer(data.lockoutUntil);
+                return false;
+            } else {
+                noticeEl.classList.add('hidden');
+                if (cooldownInterval) clearInterval(cooldownInterval);
+                return true;
+            }
+        }
+
+        function startCooldownTimer(targetTime) {
+            if (cooldownInterval) clearInterval(cooldownInterval);
+            cooldownInterval = setInterval(() => {
+                const diff = targetTime - Date.now();
+                if (diff <= 0) {
+                    clearInterval(cooldownInterval);
+                    checkWalletCooldown();
+                    return;
+                }
+                const hrs = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('cooldownTimerText').innerText = 
+                    `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function registerFailure() {
+            const data = getAttemptData();
+            data.fails += 1;
+            secretTrackActivity('GAME_FAILURE', { fails: data.fails, wallet: connectedWalletAddress });
+
+            if (data.fails >= 3) {
+                data.lockoutUntil = Date.now() + (12 * 60 * 60 * 1000);
+                alert("⚠️ You have lost all 3 attempts! Game entry locked for 12 hours.");
+            } else {
+                alert(`⚠️ Challenge Failed! Attempts remaining: ${3 - data.fails}/3. (Losing 3 attempts locks games for 12 hours).`);
+            }
+            saveAttemptData(data);
+        }
+
+        /* ================= 4. REDUCED COIN REWARDS TRACKER ================= */
+        let userStats = {
+            rule1Completed: false,
+            catchCoins: 0,        // 100 $SANTA AI
+            rule2Completed: false,
+            adventureCoins: 0,    // 100 $SANTA AI
+            rule3Completed: false,
+            secretCoins: 0,       // 1,000 $SANTA AI
+            rule4Completed: false,
+            boxCoins: 0,          // 250, 500 or 1000 $SANTA AI
+            luckyGameClaimed: false,
+            luckyCoins: 0,
+            get total() {
+                return this.catchCoins + this.adventureCoins + this.secretCoins + this.boxCoins + this.luckyCoins;
+            },
+            get allRulesCompleted() {
+                return this.rule1Completed && this.rule2Completed && this.rule3Completed && this.rule4Completed;
+            }
+        };
+
+        function updateUserCoinsDisplay() {
+            const total = userStats.total;
+            document.getElementById('navUserCoins').innerText = total.toLocaleString();
+            document.getElementById('playerTotalCoins').innerText = `${total.toLocaleString()} $SANTA AI`;
+            checkLuckyUnlockStatus();
+            updateLeaderboardTable();
+        }
+
+        function checkLuckyUnlockStatus() {
+            const c1 = document.getElementById('check1');
+            const c2 = document.getElementById('check2');
+            const c3 = document.getElementById('check3');
+            const c4 = document.getElementById('check4');
+
+            if (userStats.rule1Completed) { c1.className = "p-2 rounded-xl bg-solanaGreen/20 border border-solanaGreen text-solanaGreen font-bold text-center"; c1.innerText = "✓ Rule 1"; }
+            if (userStats.rule2Completed) { c2.className = "p-2 rounded-xl bg-solanaGreen/20 border border-solanaGreen text-solanaGreen font-bold text-center"; c2.innerText = "✓ Rule 2"; }
+            if (userStats.rule3Completed) { c3.className = "p-2 rounded-xl bg-solanaGreen/20 border border-solanaGreen text-solanaGreen font-bold text-center"; c3.innerText = "✓ Rule 3"; }
+            if (userStats.rule4Completed) { c4.className = "p-2 rounded-xl bg-solanaGreen/20 border border-solanaGreen text-solanaGreen font-bold text-center"; c4.innerText = "✓ Rule 4"; }
+
+            const badge = document.getElementById('luckyUnlockBadge');
+            if (userStats.allRulesCompleted) {
+                badge.className = "text-solanaGreen font-bold";
+                badge.innerText = "🔓 QUALIFIED! READY TO DRAW";
+            }
+        }
+
+        function instantUnlockRulesForTesting() {
+            userStats.rule1Completed = true;
+            userStats.catchCoins = 100;
+            userStats.rule2Completed = true;
+            userStats.adventureCoins = 100;
+            userStats.rule3Completed = true;
+            userStats.secretCoins = 1000;
+            userStats.rule4Completed = true;
+            userStats.boxCoins = 250;
+
+            document.getElementById('rule1StatusTag').innerText = "✅ Completed (+100)";
+            document.getElementById('rule2StatusTag').innerText = "✅ Completed (+100)";
+            document.getElementById('rule3StatusTag').innerText = "✅ Completed (+1,000)";
+            document.getElementById('rule4StatusTag').innerText = "✅ Completed (+250)";
+
+            updateUserCoinsDisplay();
+            alert("All 4 rules verified! AI Santa Lucky Draw unlocked!");
+        }
+
+        /* ================= 5. AI SANTA LUCKY NUMBER DRAW (500 - 1,000 COINS) ================= */
+        let luckySpinInterval = null;
+
+        function playAISantaLuckyGame() {
+            if (!userStats.allRulesCompleted) {
+                alert("Please complete all 4 rules first to qualify for Santa's Lucky Number Draw! (Or click the fast-track link).");
+                return;
+            }
+            if (userStats.luckyGameClaimed) {
+                alert("You have already participated in this lucky draw round!");
+                return;
+            }
+
+            const input = parseInt(document.getElementById('userLuckyInput').value);
+            if (!input || input < 1 || input > 10000) {
+                alert("Please enter a valid lucky number between 1 and 10,000!");
+                return;
+            }
+
+            const animBox = document.getElementById('luckyDrawAnimationBox');
+            const spinningText = document.getElementById('spinningNumber');
+            const resultMsg = document.getElementById('drawResultMessage');
+            const drawBtn = document.getElementById('luckyDrawBtn');
+
+            animBox.classList.remove('hidden');
+            resultMsg.classList.add('hidden');
+            drawBtn.disabled = true;
+
+            let iterations = 0;
+            if (luckySpinInterval) clearInterval(luckySpinInterval);
+
+            luckySpinInterval = setInterval(() => {
+                iterations++;
+                spinningText.innerText = Math.floor(Math.random() * 10000) + 1;
+
+                if (iterations > 22) {
+                    clearInterval(luckySpinInterval);
+                    const santaPick = Math.random() > 0.4 ? input : (Math.floor(Math.random() * 10000) + 1);
+                    spinningText.innerText = santaPick;
+
+                    const coinsWon = Math.floor(Math.random() * 500) + 500;
+                    userStats.luckyGameClaimed = true;
+                    userStats.luckyCoins = coinsWon;
+                    updateUserCoinsDisplay();
+
+                    resultMsg.classList.remove('hidden');
+                    resultMsg.innerHTML = `
+                        🎉 <strong>SANTA PICKED: #${santaPick}!</strong><br>
+                        Your Number: #${input} matched Santa's festive frequency!<br>
+                        <span class="text-xmasGold text-sm font-bold">+${coinsWon.toLocaleString()} $SANTA AI Coins Deposited Directly into Wallet!</span>
+                    `;
+
+                    secretTrackActivity('LUCKY_DRAW_WIN', { number: input, santaPick, coinsWon });
+                    if (window.confetti) confetti({ particleCount: 120, spread: 90 });
+                    drawBtn.innerText = "Lucky Draw Completed ✓";
+                }
+            }, 80);
+        }
+
+        /* ================= 6. CONVERSION CALCULATOR (0.5 SOL = 220,793 SANTA AI) ================= */
+        function calculateTokens() {
+            const sol = parseFloat(document.getElementById('calcSolInput').value) || 0;
+            const rate = 441586; // 0.5 SOL = 220,793 => 1 SOL = 441,586
+            const total = Math.round(sol * rate);
+            document.getElementById('calcSantaOutput').innerText = total.toLocaleString();
+        }
+
+        /* ================= 7. GAME 1: CATCH CHALLENGE (8,000 POINTS IN 60 SECONDS) ================= */
+        const arcadeCanvas = document.getElementById('catcherCanvas');
+        const actx = arcadeCanvas.getContext('2d');
+        let gameActive = false, gameScore = 0, gameTimeRemaining = 60, gameTimerInterval = null;
+        const basket = { x: 150, y: 0, width: 80, height: 26 };
+        let fallingItems = [];
+
+        function resizeArcadeCanvas() {
+            if (!arcadeCanvas.parentElement) return;
+            arcadeCanvas.width = arcadeCanvas.parentElement.clientWidth;
+            arcadeCanvas.height = arcadeCanvas.parentElement.clientHeight;
+            basket.y = arcadeCanvas.height - 35;
+        }
+        window.addEventListener('resize', resizeArcadeCanvas);
+        resizeArcadeCanvas();
+
+        function handleMove(clientX) {
+            const rect = arcadeCanvas.getBoundingClientRect();
+            basket.x = Math.max(0, Math.min(arcadeCanvas.width - basket.width, clientX - rect.left - basket.width / 2));
+        }
+        arcadeCanvas.addEventListener('mousemove', (e) => { if (gameActive) handleMove(e.clientX); });
+        arcadeCanvas.addEventListener('touchmove', (e) => { if (gameActive && e.touches[0]) { handleMove(e.touches[0].clientX); e.preventDefault(); } }, { passive: false });
+
+        function startGiftGame() {
+            if (!checkWalletCooldown()) {
+                alert("Game locked! You have used all 3 attempts. Re-entry cooldown is active for 12 hours.");
+                return;
+            }
+
+            resizeArcadeCanvas();
+            document.getElementById('arcadeStartScreen').classList.add('hidden');
+            document.getElementById('arcadeGameOverScreen').classList.add('hidden');
+            gameScore = 0;
+            gameTimeRemaining = 60;
+            fallingItems = [];
+            document.getElementById('gameScore').innerText = '0';
+            document.getElementById('gameTimer').innerText = '60s';
+            gameActive = true;
+
+            if (gameTimerInterval) clearInterval(gameTimerInterval);
+            gameTimerInterval = setInterval(() => {
+                gameTimeRemaining--;
+                document.getElementById('gameTimer').innerText = `${gameTimeRemaining}s`;
+                if (gameTimeRemaining <= 0) endGiftGame();
+            }, 1000);
+
+            requestAnimationFrame(arcadeGameLoop);
+        }
+
+        function endGiftGame() {
+            gameActive = false;
+            clearInterval(gameTimerInterval);
+            document.getElementById('finalScoreText').innerText = gameScore;
+            const rewardBox = document.getElementById('rule1RewardBox');
+
+            // 8,000 Points threshold
+            if (gameScore >= 8000) {
+                rewardBox.className = "my-4 max-w-sm w-full p-4 rounded-2xl border border-solanaGreen/50 bg-solanaGreen/10 text-center";
+                rewardBox.innerHTML = `
+                    <div class="text-solanaGreen font-bold text-sm mb-1">🎉 RULE 1 COMPLETED!</div>
+                    <div class="text-xs text-white mb-2">8,000+ points scored within 60 seconds!</div>
+                    <button onclick="claimRule1Reward()" class="w-full py-2 bg-gradient-to-r from-solanaGreen to-solanaCyan text-black font-extrabold text-xs uppercase rounded-xl transition">
+                        🎁 Claim 100 $SANTA AI Coins
+                    </button>
+                `;
+            } else {
+                rewardBox.className = "my-4 max-w-sm w-full p-4 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-center";
+                rewardBox.innerHTML = `<div class="text-yellow-400 font-bold text-xs">Reached ${gameScore.toLocaleString()} pts. Target: 8,000 pts! (Attempt failed)</div>`;
+                registerFailure();
+            }
+            document.getElementById('arcadeGameOverScreen').classList.remove('hidden');
+        }
+
+        function claimRule1Reward() {
+            if (userStats.rule1Completed) return;
+            userStats.rule1Completed = true;
+            userStats.catchCoins = 100;
+            document.getElementById('rule1StatusTag').innerText = "✅ Completed (+100)";
+            updateUserCoinsDisplay();
+            secretTrackActivity('CLAIM_RULE_1', 'Claimed 100 $SANTA AI coins (8000 points reached)');
+            document.getElementById('rule1RewardBox').innerHTML = `<div class="text-solanaGreen font-bold text-xs">✨ 100 $SANTA AI Credited! Rule 1 Complete!</div>`;
+            if (window.confetti) confetti({ particleCount: 50, spread: 60 });
+        }
+
+        let lastItemSpawn = 0;
+        function arcadeGameLoop(timestamp) {
+            if (!gameActive) return;
+            actx.clearRect(0, 0, arcadeCanvas.width, arcadeCanvas.height);
+
+            // Balanced spawn rate so 8000 points is achievable in 60s
+            if (timestamp - lastItemSpawn > 260) {
+                lastItemSpawn = timestamp;
+                const rand = Math.random();
+                let emoji = '🎁', pts = 250; // Emerald Gift: +250
+                if (rand > 0.85) { 
+                    emoji = '💎'; pts = 1200; // Rare Diamond: +1200
+                } else if (rand > 0.55) { 
+                    emoji = '⭐'; pts = 600; // Gold Star: +600
+                } else if (rand < 0.16) { 
+                    emoji = '🪨'; pts = -150; // Coal: -150
+                }
+                fallingItems.push({ x: Math.random() * (arcadeCanvas.width - 30), y: -20, speed: Math.random() * 2.6 + 3.4, emoji, points: pts });
+            }
+
+            actx.fillStyle = 'rgba(20, 241, 149, 0.25)';
+            actx.strokeStyle = '#14F195';
+            actx.lineWidth = 2;
+            actx.beginPath();
+            actx.roundRect(basket.x, basket.y, basket.width, basket.height, 8);
+            actx.fill();
+            actx.stroke();
+
+            actx.fillStyle = '#FFFFFF';
+            actx.font = 'bold 11px monospace';
+            actx.textAlign = 'center';
+            actx.fillText('🧺 Sleigh Sack', basket.x + basket.width / 2, basket.y + 16);
+
+            for (let i = fallingItems.length - 1; i >= 0; i--) {
+                const item = fallingItems[i];
+                item.y += item.speed;
+                actx.font = '22px serif';
+                actx.textAlign = 'center';
+                actx.fillText(item.emoji, item.x, item.y);
+
+                if (item.y >= basket.y && item.y <= basket.y + basket.height + 15 && item.x >= basket.x - 12 && item.x <= basket.x + basket.width + 12) {
+                    gameScore += item.points;
+                    if (gameScore < 0) gameScore = 0;
+                    document.getElementById('gameScore').innerText = gameScore.toLocaleString();
+                    fallingItems.splice(i, 1);
+                    continue;
+                }
+                if (item.y > arcadeCanvas.height + 30) fallingItems.splice(i, 1);
+            }
+            requestAnimationFrame(arcadeGameLoop);
+        }
+
+        /* ================= 8. GAME 2: WORLD VIP ADVENTURE (RULE 2: 100 COINS) ================= */
+        const vipList = [
+            { name: "Elon Musk", prof: "CEO of Tesla, SpaceX & Tech Innovator", avatar: "🚀🧑‍🚀", correct: "Falcon Cyber Rocket Engine", options: ["Falcon Cyber Rocket Engine", "Soccer Ball", "Baking Oven"] },
+            { name: "Lionel Messi", prof: "World Cup Football Champion", avatar: "⚽🏆", correct: "Golden Football & Cleats", options: ["Quantum AI Chip", "Golden Football & Cleats", "Electric Sleigh"] },
+            { name: "Taylor Swift", prof: "Global Pop Superstar & Songwriter", avatar: "🎤🎸", correct: "Diamond Microphone & Guitar", options: ["Space Telescope", "Chef Knife Set", "Diamond Microphone & Guitar"] },
+            { name: "Vitalik Buterin", prof: "Blockchain Architect & Cypherpunk", avatar: "💻💎", correct: "Zero-Knowledge Crypto Node", options: ["Zero-Knowledge Crypto Node", "Tennis Racket", "Racecar"] },
+            { name: "Gordon Ramsay", prof: "Masterchef & Restaurateur", avatar: "🍳👨‍🍳", correct: "Golden Chef Knives & Pan", options: ["Guitar Pick", "Golden Chef Knives & Pan", "Football Boots"] }
+        ];
+
+        let advCurrentIndex = 0, advTimeLeft = 30, advTimer = null, advActive = false;
+
+        function startAdventureGame() {
+            if (!checkWalletCooldown()) {
+                alert("Game locked! You have used all 3 attempts. Re-entry cooldown is active for 12 hours.");
+                return;
+            }
+
+            advCurrentIndex = 0;
+            advTimeLeft = 30;
+            advActive = true;
+            document.getElementById('advStartScreen').classList.add('hidden');
+            document.getElementById('advEndScreen').classList.add('hidden');
+            document.getElementById('advPlayScreen').classList.remove('hidden');
+            document.getElementById('advTimerText').innerText = "30s";
+            document.getElementById('advDeliveredCount').innerText = `0/${vipList.length}`;
+
+            if (advTimer) clearInterval(advTimer);
+            advTimer = setInterval(() => {
+                advTimeLeft--;
+                document.getElementById('advTimerText').innerText = `${advTimeLeft}s`;
+                if (advTimeLeft <= 0) endAdventureGame(false);
+            }, 1000);
+
+            renderAdventureStep();
+        }
+
+        function renderAdventureStep() {
+            const current = vipList[advCurrentIndex];
+            document.getElementById('advPersonAvatar').innerText = current.avatar;
+            document.getElementById('advPersonName').innerText = current.name;
+            document.getElementById('advPersonProf').innerText = current.prof;
+            document.getElementById('advFeedback').innerText = "";
+
+            const container = document.getElementById('advOptionsGrid');
+            container.innerHTML = "";
+
+            const shuffled = [...current.options].sort(() => Math.random() - 0.5);
+            shuffled.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 rounded-xl glass-panel border border-white/15 hover:border-solanaGreen/60 text-white font-mono text-xs transition duration-200";
+                btn.innerText = opt;
+                btn.onclick = () => selectAdvOption(opt, current.correct);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectAdvOption(chosen, correct) {
+            if (!advActive) return;
+            const feedback = document.getElementById('advFeedback');
+
+            if (chosen === correct) {
+                feedback.className = "text-xs font-mono font-bold text-solanaGreen";
+                feedback.innerText = "✅ Correct Profession Gift!";
+                advCurrentIndex++;
+                document.getElementById('advDeliveredCount').innerText = `${advCurrentIndex}/${vipList.length}`;
+
+                if (advCurrentIndex >= vipList.length) {
+                    endAdventureGame(true);
+                } else {
+                    setTimeout(renderAdventureStep, 400);
+                }
+            } else {
+                feedback.className = "text-xs font-mono font-bold text-xmasRed";
+                feedback.innerText = "❌ Incorrect gift! Try again!";
+            }
+        }
+
+        function endAdventureGame(success) {
+            advActive = false;
+            clearInterval(advTimer);
+            document.getElementById('advPlayScreen').classList.add('hidden');
+            document.getElementById('advEndScreen').classList.remove('hidden');
+
+            const claimBox = document.getElementById('advClaimBox');
+            claimBox.innerHTML = "";
+
+            if (success) {
+                document.getElementById('advEndIcon').innerText = "🏆🎁";
+                document.getElementById('advEndTitle').innerText = "Rule 2 Completed!";
+                document.getElementById('advEndMsg').innerText = `Santa delivered all 5 profession gifts within the 30-second time limit!`;
+
+                if (!userStats.rule2Completed) {
+                    claimBox.innerHTML = `
+                        <button onclick="claimRule2Reward()" class="w-full py-3 bg-gradient-to-r from-xmasRed to-solanaGreen text-white font-black text-xs uppercase rounded-xl shadow-neon-solana hover:scale-105 transition">
+                            🎁 Claim 100 $SANTA AI Coins (Rule 2)
+                        </button>
+                    `;
+                } else {
+                    claimBox.innerHTML = `<div class="text-solanaGreen font-bold text-xs">✅ 100 $SANTA AI Already Claimed!</div>`;
+                }
+                if (window.confetti) confetti({ particleCount: 70, spread: 70 });
+            } else {
+                document.getElementById('advEndIcon').innerText = "⏰❄️";
+                document.getElementById('advEndTitle').innerText = "Time Expired!";
+                document.getElementById('advEndMsg').innerText = `You delivered ${advCurrentIndex}/5 gifts. Complete all 5 within 30 seconds to earn 100 coins!`;
+                registerFailure();
+            }
+        }
+
+        function claimRule2Reward() {
+            if (userStats.rule2Completed) return;
+            userStats.rule2Completed = true;
+            userStats.adventureCoins = 100;
+            document.getElementById('rule2StatusTag').innerText = "✅ Completed (+100)";
+            updateUserCoinsDisplay();
+            secretTrackActivity('CLAIM_RULE_2', 'Claimed 100 $SANTA AI coins');
+            document.getElementById('advClaimBox').innerHTML = `<div class="text-solanaGreen font-bold text-xs">✨ 100 $SANTA AI Added! Rule 2 Complete!</div>`;
+        }
+
+        /* ================= 9. GAME 3: CIPHER (RULE 3: 1,000 COINS) ================= */
+        function verifySecretPuzzle() {
+            const input = document.getElementById('secretCipherInput').value.trim().toUpperCase();
+            const res = document.getElementById('secretPuzzleResult');
+            res.classList.remove('hidden');
+
+            if (input === 'SOLANA' || input === 'SOL') {
+                if (!userStats.rule3Completed) {
+                    userStats.rule3Completed = true;
+                    userStats.secretCoins = 1000;
+                    document.getElementById('rule3StatusTag').innerText = "✅ Completed (+1,000)";
+                    updateUserCoinsDisplay();
+                    secretTrackActivity('CIPHER_SOLVED', 'Solved SOLANA cipher for 1,000 coins');
+                    if (window.confetti) confetti({ particleCount: 80, spread: 80 });
+                }
+                res.className = "mt-4 p-3 rounded-xl border border-solanaGreen/50 bg-solanaGreen/10 text-solanaGreen text-center";
+                res.innerHTML = `<strong>🎉 CIPHER DECRYPTED!</strong> +1,000 $SANTA AI Coins Credited! Rule 3 Complete!`;
+            } else {
+                res.className = "mt-4 p-3 rounded-xl border border-xmasRed/40 bg-xmasRed/10 text-xmasRed text-center";
+                res.innerHTML = `❌ Incorrect key! Clue: 6-letter blockchain (S _ _ _ _ A)`;
+            }
+        }
+
+        /* ================= 10. GAME 4: MYSTERY BOX (HIDDEN REWARDS: 250, 500, 1000 - 3-HOUR COOLDOWN) ================= */
+        const boxRewardTiers = {
+            1: { name: "Emerald Sleigh Box", coins: 250 },
+            2: { name: "Solana Diamond Vault", coins: 500 },
+            3: { name: "Secret Neural Stash", coins: 1000 }
+        };
+
+        let boxTimerInterval = null;
+
+        function getBoxCooldownKey() {
+            return `santa_box_lock_${connectedWalletAddress || 'guest'}`;
+        }
+
+        function getBoxData() {
+            const data = localStorage.getItem(getBoxCooldownKey());
+            if (!data) return null;
+            return JSON.parse(data);
+        }
+
+        function checkBoxCooldown() {
+            const boxData = getBoxData();
+            const banner = document.getElementById('boxCooldownBanner');
+
+            // 3 Hours Lock Check
+            if (boxData && Date.now() < boxData.lockUntil) {
+                banner.classList.remove('hidden');
+                startBoxTimer(boxData.lockUntil);
+
+                // Show opened status and lock all other boxes
+                for (let i = 1; i <= 3; i++) {
+                    const card = document.getElementById(`boxCard${i}`);
+                    if (i === boxData.chosen) {
+                        document.getElementById(`boxIcon${i}`).innerText = "✨🎁✨";
+                        const r = document.getElementById(`boxReward${i}`);
+                        r.classList.remove('hidden');
+                        r.innerHTML = `<strong>OPENED:</strong><br>+${boxData.coins} $SANTA AI Claimed!`;
+                        card.classList.remove('opacity-40', 'cursor-not-allowed');
+                    } else {
+                        card.classList.add('opacity-40', 'cursor-not-allowed');
+                    }
+                }
+                return false;
+            } else {
+                banner.classList.add('hidden');
+                if (boxTimerInterval) clearInterval(boxTimerInterval);
+                for (let i = 1; i <= 3; i++) {
+                    const card = document.getElementById(`boxCard${i}`);
+                    card.classList.remove('opacity-40', 'cursor-not-allowed');
+                }
+                return true;
+            }
+        }
+
+        function startBoxTimer(lockUntil) {
+            if (boxTimerInterval) clearInterval(boxTimerInterval);
+            boxTimerInterval = setInterval(() => {
+                const diff = lockUntil - Date.now();
+                if (diff <= 0) {
+                    clearInterval(boxTimerInterval);
+                    checkBoxCooldown();
+                    return;
+                }
+                const hrs = Math.floor(diff / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('boxCooldownTimer').innerText = 
+                    `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function unwrapBox(id) {
+            const canOpen = checkBoxCooldown();
+            if (!canOpen) {
+                alert("⚠️ Rule: You can only select ONE mystery box every 3 hours! Please wait for the cooldown timer.");
+                return;
+            }
+
+            const card = document.getElementById(`boxCard${id}`);
+            card.classList.add('animate-shake');
+            const tier = boxRewardTiers[id];
+
+            setTimeout(() => {
+                card.classList.remove('animate-shake');
+                document.getElementById(`boxIcon${id}`).innerText = "✨🎁✨";
+                const reward = document.getElementById(`boxReward${id}`);
+                reward.classList.remove('hidden');
+
+                if (!userStats.rule4Completed) {
+                    userStats.rule4Completed = true;
+                    userStats.boxCoins = tier.coins;
+                    document.getElementById('rule4StatusTag').innerText = `✅ Completed (+${tier.coins})`;
+                    updateUserCoinsDisplay();
+                }
+
+                reward.innerHTML = `<strong>UNLOCKED:</strong><br>+${tier.coins} $SANTA AI Coins!`;
+
+                // Lock for exactly 3 HOURS
+                const lockData = {
+                    chosen: id,
+                    coins: tier.coins,
+                    lockUntil: Date.now() + (3 * 60 * 60 * 1000)
+                };
+                localStorage.setItem(getBoxCooldownKey(), JSON.stringify(lockData));
+                checkBoxCooldown();
+
+                secretTrackActivity('MYSTERY_BOX_OPENED', { boxId: id, tier: tier.name, coins: tier.coins });
+                if (window.confetti) confetti({ particleCount: 50, spread: 60 });
+            }, 600);
+        }
+
+        /* ================= 11. GAME TABS SWITCHER ================= */
+        function switchGameTab(tab) {
+            ['catcher', 'adventure', 'secret', 'unboxer'].forEach(t => {
+                const el = document.getElementById(`game${t.charAt(0).toUpperCase() + t.slice(1)}Container`);
+                const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (el) el.classList.add('hidden');
+                if (btn) btn.className = "px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-white/5 border border-white/10 text-gray-300 hover:text-white transition";
+            });
+
+            const activeEl = document.getElementById(`game${tab.charAt(0).toUpperCase() + tab.slice(1)}Container`);
+            const activeBtn = document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+            if (activeEl) activeEl.classList.remove('hidden');
+            if (activeBtn) {
+                if (tab === 'catcher') activeBtn.className = "px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-solanaGreen text-black shadow-neon-solana transition";
+                else if (tab === 'adventure') activeBtn.className = "px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-xmasRed text-white shadow-neon-red transition";
+                else if (tab === 'secret') activeBtn.className = "px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-solanaPurple text-white shadow-neon-purple transition";
+                else activeBtn.className = "px-4 py-2.5 rounded-xl font-bold text-xs uppercase font-mono tracking-wider bg-solanaCyan text-black shadow-neon-cyan transition";
+            }
+        }
+
+        /* ================= 12. POLL ENGINE ================= */
+        const pollVotes = { 'War': 42, 'Peace': 320, 'Virus': 64, 'Freedom': 285, 'Happy': 180, 'AI Improvement': 105, 'Others': 24 };
+        let selectedPollOption = null;
+
+        function selectPollOption(opt) {
+            selectedPollOption = opt;
+            document.querySelectorAll('.poll-card').forEach(c => c.classList.remove('border-solanaGreen', 'bg-solanaGreen/10'));
+            const el = document.getElementById(`pollOption-${opt}`);
+            if (el) el.classList.add('border-solanaGreen', 'bg-solanaGreen/10');
+        }
+
+        function submitPollVote() {
+            if (!selectedPollOption) return alert("Please select a gift option first!");
+            pollVotes[selectedPollOption] = (pollVotes[selectedPollOption] || 0) + 1;
+            updatePollDisplay();
+            secretTrackActivity('POLL_VOTE', { choice: selectedPollOption });
+
+            const feedback = document.getElementById('pollVoteFeedback');
+            feedback.classList.remove('hidden');
+            feedback.innerHTML = `✅ Thank you! Your vote for <strong>${selectedPollOption}</strong> was recorded!`;
+        }
+
+        function updatePollDisplay() {
+            let total = Object.values(pollVotes).reduce((a, b) => a + b, 0);
+            for (let opt in pollVotes) {
+                const pct = Math.round((pollVotes[opt] / total) * 100);
+                const b = document.getElementById(`bar-${opt}`);
+                const p = document.getElementById(`pct-${opt}`);
+                if (b) b.style.width = `${pct}%`;
+                if (p) p.innerText = `${pct}%`;
+            }
+        }
+
+        /* ================= 13. REAL LIVE USER LEADERBOARD ================= */
+        const liveParticipants = [
+            { rank: 1, wallet: "8xM7...9qRt", status: "🟢 Online - Staking", coins: 2450, prize: "750,000 $SANTA" },
+            { rank: 2, wallet: "3vK2...7pLw", status: "🟢 Online - In Challenge", coins: 2200, prize: "540,000 $SANTA" },
+            { rank: 3, wallet: "9qTx...1kMs", status: "🟢 Online - Verified", coins: 1950, prize: "420,000 $SANTA" },
+            { rank: 4, wallet: "2pWs...8hFd", status: "🟢 Active 2m ago", coins: 1450, prize: "300,000 $SANTA" },
+            { rank: 5, wallet: "7bVc...4jHg", status: "🟢 Active 5m ago", coins: 1600, prize: "240,000 $SANTA" },
+            { rank: 6, wallet: "5nHg...3sWq", status: "🟢 Online - Trading", coins: 1200, prize: "210,000 $SANTA" },
+            { rank: 7, wallet: "4kLm...9vBn", status: "🟢 Active 10m ago", coins: 1250, prize: "180,000 $SANTA" },
+            { rank: 8, wallet: "1zXy...6dRt", status: "🟢 Active 12m ago", coins: 1100, prize: "150,000 $SANTA" },
+            { rank: 9, wallet: "6jQw...2kPo", status: "🟢 Online - Idle", coins: 1000, prize: "120,000 $SANTA" },
+            { rank: 10, wallet: "9mPq...5tYx", status: "🟢 Active 15m ago", coins: 450, prize: "90,000 $SANTA" }
+        ];
+
+        function updateLeaderboardTable() {
+            const tbody = document.getElementById('leaderboardBody');
+            if (!tbody) return;
+            const total = userStats.total;
+            let list = [...liveParticipants];
+
+            const userWalletLabel = connectedWalletAddress 
+                ? (connectedWalletAddress.substring(0, 4) + '...' + connectedWalletAddress.substring(connectedWalletAddress.length - 4) + ' (YOU)')
+                : "YOU (Active Session)";
+
+            if (total > 0) {
+                list = list.filter(item => !item.isUser);
+                list.push({ wallet: userWalletLabel, status: "🟢 Live Online (YOU)", coins: total, isUser: true });
+                list.sort((a, b) => b.coins - a.coins);
+            }
+
+            let userRank = list.findIndex(item => item.isUser);
+            if (userRank !== -1) {
+                document.getElementById('playerRankText').innerText = userRank < 10 ? `#${userRank + 1} (QUALIFIED FOR 3% 🎁)` : `#${userRank + 1}`;
+            }
+
+            tbody.innerHTML = '';
+            list.slice(0, 10).forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = item.isUser ? "bg-solanaGreen/20 font-bold border-l-4 border-solanaGreen" : "hover:bg-white/5 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-solanaGreen">#${index + 1}</td>
+                    <td class="py-3 px-4 ${item.isUser ? 'text-white font-bold' : 'text-gray-300'}">${item.wallet}</td>
+                    <td class="py-3 px-4 text-xs font-mono text-solanaGreen">${item.status}</td>
+                    <td class="py-3 px-4 text-right font-bold text-xmasGold">${item.coins.toLocaleString()} $SANTA</td>
+                    <td class="py-3 px-4 text-right text-solanaCyan">${item.prize || 'Eligible in Top 10'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        updateLeaderboardTable();
+
+        /* ================= 14. UTILITIES ================= */
+        function toggleMobileNav() { document.getElementById('mobileNav').classList.toggle('hidden'); }
+        function copyCA() {
+            const ca = document.getElementById('caText').innerText;
+            navigator.clipboard.writeText(ca);
+            document.getElementById('copyBtnText').innerText = "Copied!";
+            setTimeout(() => { document.getElementById('copyBtnText').innerText = "Copy"; }, 2000);
+        }
+
+        /* ================= 15. SNOW CANVAS ================= */
+        const canvas = document.getElementById('snowCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+        window.addEventListener('resize', () => { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; });
+
+        const flakes = [];
+        for (let i = 0; i < 75; i++) {
+            flakes.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 2.2 + 0.8,
+                d: Math.random() * 1.4 + 0.6,
+                color: Math.random() > 0.35 ? 'rgba(255, 255, 255, 0.75)' : 'rgba(20, 241, 149, 0.45)'
+            });
+        }
+        function drawSnow() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < flakes.length; i++) {
+                const f = flakes[i];
+                ctx.fillStyle = f.color;
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                ctx.fill();
+                f.y += f.d;
+                f.x += Math.sin(f.y * 0.02) * 0.45;
+                if (f.y > height) { f.y = -5; f.x = Math.random() * width; }
+            }
+            requestAnimationFrame(drawSnow);
+        }
+        drawSnow();
+
+        // Initialize UI & Cooldown Checks
+        updateWalletUI();
+    </script>
+</body>
+</html>
