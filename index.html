@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -264,11 +263,11 @@
                 </a>
             </div>
 
-            <!-- Contract Address Box -->
+            <!-- Contract Address Box (Updated with Real Mint Address) -->
             <div class="max-w-xl mx-auto bg-black/60 border border-white/15 rounded-2xl p-3 flex items-center justify-between backdrop-blur-xl shadow-2xl">
                 <div class="flex items-center space-x-3 truncate pl-3">
                     <span class="text-xs font-mono text-solanaGreen font-bold uppercase tracking-widest">CA:</span>
-                    <span id="caText" class="font-mono text-xs sm:text-sm text-gray-300 truncate">SantaiSolanaChristmas100MSupplyPumpFunAddress</span>
+                    <span id="caText" class="font-mono text-xs sm:text-sm text-gray-300 truncate">9yGytd9xskDHqipyjLgSCWrkoZh8KMn22GFputa2kXm9</span>
                 </div>
                 <button onclick="copyCA()" class="bg-solanaPurple/30 border border-solanaPurple/50 hover:bg-solanaPurple/50 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 flex-shrink-0">
                     <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -849,8 +848,8 @@
                     </div>
                 </div>
 
-                <!-- 1-Click Raydium AMM Button -->
-                <a id="raydiumDirectSwapBtn" href="https://raydium.io/swap/?inputMint=sol&outputMint=SantaiSolanaChristmas100MSupplyPumpFunAddress" target="_blank" class="w-full py-4 bg-gradient-to-r from-solanaGreen via-solanaCyan to-emerald-400 text-black font-extrabold rounded-xl shadow-neon-solana hover:scale-[1.02] transition flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                <!-- 1-Click Raydium AMM Button with your Mint Address -->
+                <a id="raydiumDirectSwapBtn" href="https://raydium.io/swap/?inputMint=sol&outputMint=9yGytd9xskDHqipyjLgSCWrkoZh8KMn22GFputa2kXm9" target="_blank" class="w-full py-4 bg-gradient-to-r from-solanaGreen via-solanaCyan to-emerald-400 text-black font-extrabold rounded-xl shadow-neon-solana hover:scale-[1.02] transition flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
                     <i data-lucide="external-link" class="w-4 h-4"></i>
                     <span>Buy Santa AI on Raydium</span>
                 </a>
@@ -858,7 +857,7 @@
                 <div class="flex items-center justify-center gap-4 text-xs font-mono text-gray-400 pt-2">
                     <a href="https://jup.ag" target="_blank" class="hover:text-solanaGreen flex items-center gap-1">Jupiter DEX &rarr;</a>
                     <span>•</span>
-                    <a href="https://dexscreener.com" target="_blank" class="hover:text-solanaGreen flex items-center gap-1">DexScreener Chart &rarr;</a>
+                    <a href="https://dexscreener.com/solana/9yGytd9xskDHqipyjLgSCWrkoZh8KMn22GFputa2kXm9" target="_blank" class="hover:text-solanaGreen flex items-center gap-1">DexScreener Chart &rarr;</a>
                 </div>
             </div>
         </div>
@@ -954,7 +953,7 @@
                     alert("Wallet connection cancelled.");
                 }
             } else {
-                const promptAddr = prompt("Enter your Solana wallet address to sync live status:", "7xKX...2C87");
+                const promptAddr = prompt("Enter your Solana wallet address to sync live status:", "9yGy...kXm9");
                 if (promptAddr) {
                     connectedWalletAddress = promptAddr.trim();
                     localStorage.setItem('santa_user_wallet', connectedWalletAddress);
@@ -1178,7 +1177,8 @@
         /* ================= 6. CONVERSION CALCULATOR (0.5 SOL = 220,793 SANTA AI) ================= */
         function calculateTokens() {
             const sol = parseFloat(document.getElementById('calcSolInput').value) || 0;
-            const rate = 441586; // 0.5 SOL = 220,793 => 1 SOL = 441,586
+            // 0.5 SOL = 220,793 => 1 SOL = 441,586 SANTA AI
+            const rate = 441586;
             const total = Math.round(sol * rate);
             document.getElementById('calcSantaOutput').innerText = total.toLocaleString();
         }
